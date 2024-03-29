@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISBN Search</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    function validateISBN(isbn) {
+      return isbn.match(/^(978|979)\d{10}$/);
+    }
+
+    function searchBook() {
+      // Get the ISBN number from the form input
+      // Remove any hyphens (-) from the input value
+      var isbn = $("#isbn-input").val().replace(/-/g, '');
+
+      // Validate the input
+      if (!validateISBN(isbn)) {
+        // Display an error message if the ISBN number is invalid
+        $("#isbn-input").val("Not a valid ISBN");
+        $("#isbn-input").css("border-color", "red");
+        return;
+      }
+
+      // Build the request URL
+      var url = "https://openlibrary.org/search.json?q=" + isbn;
+
+      // Make the API request using jQuery
+      $.getJSON(url, function(data) {
+        // Check if any results were returned
+        if (data.docs.length > 0) {
+          // Extract the relevant metadata from the first result
+          var book = data.docs[0];
+          var title = book.title;
+          var author = book.author_name ? book.author_name[0] : "";
+          var publication_date = book.first_publish_year;
+          var publisher = book.publisher;
+
+          // Display the metadata on the page
+          $("#title").text(title);
+          $("#author").text(author);
+          $("#publication-date").text(publication_date);
+          $("#publisher").text(publisher);
+
+          // Clear the error message if there is one
+          $("#isbn-input").val("");
+          $("#isbn-input").css("border-color", "#ced4da");
+
+          // Display the results box
+          $("#results-box").css("display", "block");
+        }
+        else {
+          // Display an error message if no results were found
+          $("#title").text("Invalid ISBN number");
+          $("#author").text("");
+          $("#publication-date").text("");
+          $("#publisher").text("");
+
+          // Clear the results box
+          $("#results-box").css("display", "none");
+
+          alert("No results were found for this ISBN number.");
+        }
+      });
+    }
+
+    function clearForm() {
+      // Clear the ISBN input field
+      $("#isbn-input").val("");
+
+      // Clear the metadata display elements
+      $("#title").text("");
+      $("#author").text("");
+      $("#publication-date").text("");
+      $("#publisher").text("");
+
+      // Clear any error messages
+      $("#isbn-input").val("");
+      $("#isbn-input").css("border-color", "#ced4da");
+
+      // Clear the results box
+      $("#results-box").css("display", "none");
+    }
+
+    $(document).ready(function() {
+      // Add event listener to input field
+      $("#isbn-input").on("input", function() {
+        var isbn = $(this).val();
+
+        // Check if the input matches the ISBN format
+        if (validateISBN(isbn)) {
+          // Enable the Search button
+          $("#validate-isbn-btn").prop("disabled", false);
+          $("#isbn-input").css("border-color", "#ced4da");
+        }
+        else {
+          // Disable the Search button
+          $("#validate-isbn-btn").prop("disabled", true);
+          $("#isbn-input").css("border-color", "red");
+        }
+      });
+    });
+  </script>
+  <style>
+    #results-box {
+      background-color: #f3f3f3;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px
+    }
+ </style>
+    </head>
+<body>
+  <div class="container">
+    <h2 class="mt-5">ISBN Search</h2>
+    <form>
+      <div class="form-group">
+        <label for="isbn-input">Enter ISBN number to search the Open Library Project:</label>
+        <input type="text" class="form-control" id="isbn-input" style="width: 250px;">
+      </div>
+      <button type="button" class="btn btn-primary" onclick="searchBook()">Search</button>
+      <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear</button>
+    </form>
+    <div id="results-box">
+      <h2><strong>Title:</strong> <span id="title"></span></h2>
+      <p><strong>Author:</strong> <span id="author"></span></p>
+      <p><strong>Publication Date:</strong> <span id="publication-date"></span></p>
+      <p><strong>Publisher:</strong> <span id="publisher"></span></p>
+    </div>
+  </div>
+</body>
+</html>
+
